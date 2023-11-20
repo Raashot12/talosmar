@@ -4,36 +4,28 @@ import React from "react"
 import styled from "styled-components"
 import {Post} from "./page"
 
-function PostCard({post}: {post: Post[]}) {
+function PostCard({post}: {post: Post}) {
   return (
     <div
       style={{fontFamily: "Inter"}}
       className="mb-7 bg-white flex flex-col justify-start rounded-2xl shadow-md"
     >
-      {post?.length === 0 ? (
-        <div className="text-center">No Feed to show</div>
-      ) : (
-        post?.map((value, index) => {
-          return (
-            <div className="p-4" key={index}>
-              <div className="flex space-x-3 items-center ml-2 relative">
-                <Image src={value.base64str as string} alt="userimg" />
-                <div>
-                  <p
-                    style={{
-                      fontSize: ".91rem",
-                    }}
-                    className="text-gray-500 font-light"
-                  >
-                    {value.created_at}
-                  </p>
-                </div>
-              </div>
-              <p className="ml-2 mt-5">{value.post}</p>
-            </div>
-          )
-        })
-      )}
+      <div className="p-4">
+        <div className="flex space-x-3 items-center ml-2 relative">
+          <Image src={post.base64str as string} alt="userimg" />
+          <div>
+            <p
+              style={{
+                fontSize: ".91rem",
+              }}
+              className="text-gray-500 font-light"
+            >
+              {post.created_at}
+            </p>
+          </div>
+        </div>
+        <p className="ml-2 mt-5">{post?.post}</p>
+      </div>
     </div>
   )
 }

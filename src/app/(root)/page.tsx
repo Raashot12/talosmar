@@ -23,7 +23,7 @@ export default function Home() {
       )
       const responseData = await response
       if (responseData.status === 200) {
-        setData(responseData.data)
+        setData(responseData?.data?.data)
       }
     } catch (error) {
       toast.error("An unexpected error occurred", {
@@ -42,7 +42,15 @@ export default function Home() {
         <InputBox />
       </div>
       <div className="w-full xl:w-1/2 mx-auto mt-9">
-        <PostCard post={data as Post[]} />
+        <div className="flex-col flex gap-6">
+          {data?.length === 0 ? (
+            <div className="text-center">No Feed to show</div>
+          ) : (
+            data?.map((value, index) => {
+              return <PostCard post={value} key={index} />
+            })
+          )}
+        </div>
       </div>
     </main>
   )
