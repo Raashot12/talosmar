@@ -1,8 +1,8 @@
 "use client"
 
-import React, {useRef, useState, useEffect} from "react"
+import React, {useState} from "react"
 import styled from "styled-components"
-import {AiOutlineClose} from "react-icons/ai"
+import Cookies from "js-cookie"
 import Loader from "./SharedComponent/Loader"
 import {MdPublic} from "react-icons/md"
 import {FcBusinessman} from "react-icons/fc"
@@ -10,27 +10,27 @@ import {IoMdNotificationsOutline} from "react-icons/io"
 import {IoCloseCircleOutline} from "react-icons/io5"
 import {toast} from "react-toastify"
 import Notification from "./Notification"
+import {toBase64} from "@/lib/base64"
+import axios from "axios"
+import {useRouter} from "next/navigation"
 
 function InputBox({}) {
-  const filePickerRef = useRef(null)
-  const [image, setImage] = useState(null)
-  const [imagePreview, setImagePreview] = useState(null)
+  const [, setImage] = useState(null)
+  const [imagePreview, setImagePreview] = useState<string>()
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
-  const [textareaEnabled, setTextareaEnabled] = useState(false)
   const [newPost, setNewPost] = useState({
     postText: "",
-    location: "",
   })
 
-  const {postText, location} = newPost
-
+  const {postText} = newPost
+  const getLoggedUserGmail = Cookies.get("loggedin")
   const handleChange = (e: React.ChangeEvent<any>) => {
     const {name, value} = e.target
     setNewPost(prev => ({...prev, [name]: value}))
   }
-
-  const addImageFromDevice = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const router = useRouter()
+  const addImageFromDevice = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const maxSize = 5 * 1024 * 1024 // 5MB
     const allowedTypes = ["image/png", "image/jpeg"]
     const {size = 0} = (e.target.files?.[0] as File) || {}
@@ -41,7 +41,9 @@ function InputBox({}) {
           allowedTypes.includes(e.target.files?.[0].type) &&
           size <= maxSize
         ) {
-          const formData = new FormData()
+          const base64 = await toBase64(e.target.files[0])
+          console.log(base64)
+          setImagePreview(base64)
         }
       } else {
         toast("File size is too large")
@@ -50,8 +52,72 @@ function InputBox({}) {
   }
 
   const createPost = async () => {
-    setLoading(true)
-    let picUrl
+    if (imagePreview) {
+      try {
+        setLoading(true)
+        const formData = new FormData()
+        formData.append("username", getLoggedUserGmail as string)
+        formData.append("base64str", imagePreview as string)
+        formData.append("post", postText)
+        const response = await axios.post(
+          `${process.env.NEXT_PUBLIC_API}/api/createpost`,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        )
+
+        const responseData = await response
+        if (responseData.status === 200) {
+          setLoading(false)
+          setNewPost({ postText: "" })
+           toast.success("Post successfully added", {
+             position: toast.POSITION.TOP_LEFT,
+           })
+        } else {
+          setLoading(false)
+          toast.error("An unexpected error occurred", {
+            position: toast.POSITION.TOP_LEFT,
+          })
+        }
+      } catch (error) {
+        setLoading(false)
+        toast.error("An unexpected error occurred", {
+          position: toast.POSITION.TOP_LEFT,
+        })
+      }
+    } else {
+      try {
+        setLoading(true)
+        const response = await axios.post(
+          `${process.env.NEXT_PUBLIC_API}/api/createpost`,
+          {
+            username: getLoggedUserGmail,
+            post: postText,
+          }
+        )
+        const responseData = await response
+        if (responseData.status === 200) {
+          setLoading(false)
+           setNewPost({postText: ""})
+           toast.success("Post successfully added", {
+             position: toast.POSITION.TOP_LEFT,
+           })
+        } else {
+          setLoading(false)
+          toast.error("An unexpected error occurred", {
+            position: toast.POSITION.TOP_LEFT,
+          })
+        }
+      } catch (error) {
+        setLoading(false)
+        toast.error("An unexpected error occurred", {
+          position: toast.POSITION.TOP_LEFT,
+        })
+      }
+    }
   }
 
   const FormBottomHalf = () => {
@@ -67,20 +133,20 @@ function InputBox({}) {
           }}
         ></span>
 
-        <div className="flex space-x-4 mt-2 ml-4 mr-4 justify-evenly items-center">
+        <div className="flex space-x-4 mt-2 ml-4 mr-4 justify-evenly items-center flex-wrap gap-2">
           <div className="flex flex-grow justify-center items-center hover:bg-gray-100 space-x-2 mb-2 pt-2 pb-2 pl-2.5 pr-2.5 rounded-xl cursor-pointer">
-            <p className="text-lg">Upload</p>
             <input
-              onChange={addImageFromDevice}
               type="file"
-              accept="image/*"
-              style={{display: "none"}}
+              accept=".jpeg"
+              name="file"
+              onChange={addImageFromDevice}
             />
             <p>Photo</p>
           </div>
           <button
             className="flex flex-grow justify-center items-center hover:bg-gray-100 space-x-2 mb-2 pt-2 pb-2 pl-2.5 pr-2.5 rounded-xl cursor-pointer"
             type="submit"
+            disabled={postText.length < 5}
             onClick={createPost}
           >
             {loading ? (
@@ -89,8 +155,9 @@ function InputBox({}) {
               </>
             ) : (
               <>
-                {/* <ArrowSmRightIcon className="h-7" /> */}
-                <p>Post</p>
+                <p className="bg-purple-500 text-white font-bold rounded-lg px-4 py-2 hover:bg-purple-700 hover:text-white w-full">
+                  Post
+                </p>
               </>
             )}
           </button>
@@ -108,101 +175,55 @@ function InputBox({}) {
         }}
         className="bg-white rounded-2xl mt-3 mb-10"
       >
-        {textareaEnabled ? (
-          <>
-            <div className="pt-6 pl-6 pr-6">
-              <div className="flex space-x-4 items-center">
-                <FcBusinessman />
-                <div>
-                  <p style={{marginBottom: "0rem", fontWeight: "600"}}>
-                    Rasheed
-                  </p>
-                  <div className="flex text-gray-500 text-sm space-x-1 items-center">
-                    <MdPublic />
-                    <p>Public</p>
-                  </div>
+        <>
+          <div className="pt-6 pl-6 pr-6">
+            <div className="flex space-x-4 items-center">
+              <FcBusinessman size={30} />
+              <div>
+                <p style={{marginBottom: "0rem", fontWeight: "600"}}>
+                  Rasheed Akanni
+                </p>
+                <div className="flex text-gray-500 text-sm space-x-1 items-center">
+                  <MdPublic size={14} />
+                  <p>Public</p>
                 </div>
               </div>
-
-              <form className="w-full mt-5 flex flex-col justify-evenly">
-                <div className={`p-3.5 bg-gray-100 rounded-xl items-center`}>
-                  <InputTextarea
-                    name="postText"
-                    value={postText}
-                    onChange={handleChange}
-                    className={`outline-none w-full bg-transparent font-light text-md placeholder-gray-400 text-lg`}
-                    placeholder={`What's on your mind, ${"Rasheed"}?`}
-                  ></InputTextarea>
-                </div>
-                {imagePreview && (
-                  <>
-                    <ImageContainerDiv
-                      style={{marginTop: "1.15rem", marginBottom: "-1.2rem"}}
-                    >
-                      <ImagePreviewDiv
-                        onClick={() => {
-                          setImage(null)
-                          setImagePreview(null)
-                        }}
-                      >
-                        <IoCloseCircleOutline className="h-6 text-gray-700" />
-                      </ImagePreviewDiv>
-                      <ImagePreview
-                        src={imagePreview}
-                        alt="imagePreview"
-                      ></ImagePreview>
-                    </ImageContainerDiv>
-                  </>
-                )}
-                {/* <FormBottomHalf /> */}
-              </form>
             </div>
-          </>
-        ) : (
-          <>
-            <div className="flex items-center pt-6 pl-6 pr-6">
-              <form className="w-full">
-                <div className="flex w-full space-x-4 items-center">
-                  {/* <Image src={user.profilePicUrl} alt="profile pic" /> */}
-                  <div
-                    className={`flex p-3.5 bg-gray-100 rounded-full items-center w-full`}
+
+            <form className="w-full mt-5 flex flex-col justify-evenly">
+              <div className={`p-3.5 bg-gray-100 rounded-xl items-center`}>
+                <InputTextarea
+                  name="postText"
+                  value={postText}
+                  onChange={handleChange}
+                  className={`outline-none w-full bg-transparent font-light text-md placeholder-gray-400 text-lg`}
+                  placeholder={`What's on your mind, ${"Rasheed"}?`}
+                ></InputTextarea>
+              </div>
+              {imagePreview && (
+                <>
+                  <ImageContainerDiv
+                    style={{marginTop: "1.15rem", marginBottom: "-1.2rem"}}
                   >
-                    <input
-                      name="postText"
-                      value={postText}
-                      onChange={handleChange}
-                      className="outline-none w-full bg-transparent font-light text-md placeholder-gray-400 text-lg"
-                      type="text"
-                      placeholder={`What's on your mind, Rasheed?`}
-                    ></input>
-                  </div>
-                </div>
-
-                {imagePreview && (
-                  <>
-                    <ImageContainerDiv
-                      style={{marginTop: "1.125rem", marginBottom: "-.25rem"}}
+                    <ImagePreviewDiv
+                      onClick={() => {
+                        setImage(null)
+                        setImagePreview(undefined)
+                      }}
                     >
-                      <ImagePreviewDiv
-                        onClick={() => {
-                          setImage(null)
-                          setImagePreview(null)
-                        }}
-                      >
-                        <AiOutlineClose size={24} />
-                      </ImagePreviewDiv>
-                      <ImagePreview
-                        src={imagePreview}
-                        alt="imagePreview"
-                      ></ImagePreview>
-                    </ImageContainerDiv>
-                  </>
-                )}
-                <FormBottomHalf />
-              </form>
-            </div>
-          </>
-        )}
+                      <IoCloseCircleOutline className="h-6 text-gray-700" />
+                    </ImagePreviewDiv>
+                    <ImagePreview
+                      src={imagePreview as unknown as string}
+                      alt="imagePreview"
+                    ></ImagePreview>
+                  </ImageContainerDiv>
+                </>
+              )}
+              <FormBottomHalf />
+            </form>
+          </div>
+        </>
       </div>
       {error && (
         <Notification

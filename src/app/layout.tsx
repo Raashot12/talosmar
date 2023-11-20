@@ -3,6 +3,7 @@ import {Open_Sans, Roboto_Mono} from "next/font/google"
 import "react-toastify/dist/ReactToastify.css"
 import "./globals.css"
 import {AuthProvider} from "@/context/AuthContext"
+import { ToastContainer } from "react-toastify"
 
 
 const openSans = Open_Sans({
@@ -32,6 +33,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
           className={`${openSans.variable} ${robotoMono.variable} font-sans`}
         >
           {children}
+          <ToastContainer />
         </body>
       </html>
     </AuthProvider>

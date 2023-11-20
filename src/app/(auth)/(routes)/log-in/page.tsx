@@ -46,8 +46,13 @@ const Login = () => {
       const responseData = await response
       if (responseData.status === 200) {
         router.push("/")
-        Cookies.set("loggedin", "true")
+        Cookies.set("loggedin", `${data.emailAddress}`)
         setIsloading(false)
+      } else {
+        setIsloading(false)
+        toast.error("An unexpected error occurred", {
+          position: toast.POSITION.TOP_LEFT,
+        })
       }
     } catch (error) {
       setIsloading(false)
