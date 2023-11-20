@@ -1,11 +1,11 @@
 "use client"
 import InputBox from "@/components/CreatePost"
 import Header from "@/components/Header"
-import PostCard from "./PostCard"
 import axios from "axios"
 import Cookies from "js-cookie"
 import {toast} from "react-toastify"
 import {useEffect, useState} from "react"
+import PostCard from "./postCard"
 
 export interface Post {
   username: string
@@ -34,7 +34,7 @@ export default function Home() {
   useEffect(() => {
     fetchPost()
   }, [])
-  console.log(data)
+
   return (
     <main>
       <Header />

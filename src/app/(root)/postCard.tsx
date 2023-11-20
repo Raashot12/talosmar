@@ -10,10 +10,10 @@ function PostCard({post}: {post: Post[]}) {
       style={{fontFamily: "Inter"}}
       className="mb-7 bg-white flex flex-col justify-start rounded-2xl shadow-md"
     >
-      {post.length === 0 ? (
+      {post?.length === 0 ? (
         <div className="align-middle">No Feed to show</div>
       ) : (
-        post.map((value, index) => {
+        post?.map((value, index) => {
           return (
             <div className="p-4" key={index}>
               <div className="flex space-x-3 items-center ml-2 relative">
