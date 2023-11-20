@@ -1,6 +1,6 @@
 "use client"
 
-import React, {useState} from "react"
+import React, {useEffect, useState} from "react"
 import styled from "styled-components"
 import Cookies from "js-cookie"
 import Loader from "./SharedComponent/Loader"
@@ -13,10 +13,18 @@ import Notification from "./Notification"
 import {toBase64} from "@/lib/base64"
 import axios from "axios"
 import {useRouter} from "next/navigation"
+import PostCard from "@/app/(root)/postCard"
 
+export interface Post {
+  username: string
+  base64str: string | null
+  post: string
+  created_at: string
+}
 function InputBox({}) {
   const [, setImage] = useState(null)
   const [imagePreview, setImagePreview] = useState<string>()
+  const [data, setData] = useState<Post[]>([])
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
   const [newPost, setNewPost] = useState({
@@ -50,7 +58,26 @@ function InputBox({}) {
       }
     }
   }
-
+  // Fetching Post
+  const fetchPost = async () => {
+    const email = Cookies.get("loggedin")
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API}/api/posts/${email}`
+      )
+      const responseData = await response
+      if (responseData.status === 200) {
+        setData(responseData?.data?.data)
+      }
+    } catch (error) {
+      toast.error("An unexpected error occurred", {
+        position: toast.POSITION.TOP_LEFT,
+      })
+    }
+  }
+  useEffect(() => {
+    fetchPost()
+  }, [])
   const createPost = async () => {
     if (imagePreview) {
       try {
@@ -72,10 +99,11 @@ function InputBox({}) {
         const responseData = await response
         if (responseData.status === 200) {
           setLoading(false)
-          setNewPost({ postText: "" })
-           toast.success("Post successfully added", {
-             position: toast.POSITION.TOP_LEFT,
-           })
+          setNewPost({postText: ""})
+          await fetchPost()
+          toast.success("Post successfully added", {
+            position: toast.POSITION.TOP_LEFT,
+          })
         } else {
           setLoading(false)
           toast.error("An unexpected error occurred", {
@@ -101,10 +129,11 @@ function InputBox({}) {
         const responseData = await response
         if (responseData.status === 200) {
           setLoading(false)
-           setNewPost({postText: ""})
-           toast.success("Post successfully added", {
-             position: toast.POSITION.TOP_LEFT,
-           })
+          setNewPost({postText: ""})
+          await fetchPost()
+          toast.success("Post successfully added", {
+            position: toast.POSITION.TOP_LEFT,
+          })
         } else {
           setLoading(false)
           toast.error("An unexpected error occurred", {
@@ -233,6 +262,15 @@ function InputBox({}) {
           setError={setError}
         />
       )}
+      <div className="flex-col flex gap-6 mt-8">
+        {data?.length === 0 ? (
+          <div className="text-center">No Feed to show</div>
+        ) : (
+          data?.map((value, index) => {
+            return <PostCard post={value} key={index} />
+          })
+        )}
+      </div>
     </div>
   )
 }

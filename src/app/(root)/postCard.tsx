@@ -1,8 +1,8 @@
 "use client"
 
+import { Post } from "@/components/CreatePost"
 import React from "react"
 import styled from "styled-components"
-import {Post} from "./page"
 
 function PostCard({post}: {post: Post}) {
   return (
