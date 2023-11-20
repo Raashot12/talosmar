@@ -11,7 +11,7 @@ function PostCard({post}: {post: Post[]}) {
       className="mb-7 bg-white flex flex-col justify-start rounded-2xl shadow-md"
     >
       {post?.length === 0 ? (
-        <div className="align-middle">No Feed to show</div>
+        <div className="text-center">No Feed to show</div>
       ) : (
         post?.map((value, index) => {
           return (
