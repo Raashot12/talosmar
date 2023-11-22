@@ -1,6 +1,7 @@
 "use client"
-
-import { Post } from "@/components/CreatePost"
+import {FcBusinessman} from "react-icons/fc"
+import {Post} from "@/components/CreatePost"
+import dayjs from "dayjs"
 import React from "react"
 import styled from "styled-components"
 
@@ -12,7 +13,7 @@ function PostCard({post}: {post: Post}) {
     >
       <div className="p-4">
         <div className="flex space-x-3 items-center ml-2 relative">
-          <Image src={post.base64str as string} alt="userimg" />
+          <FcBusinessman size={50} />
           <div>
             <p
               style={{
@@ -20,7 +21,7 @@ function PostCard({post}: {post: Post}) {
               }}
               className="text-gray-500 font-light"
             >
-              {post.created_at}
+              {dayjs(post.created_at).format("dddd, MMMM D, YYYY")}
             </p>
           </div>
         </div>

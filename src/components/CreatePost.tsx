@@ -22,7 +22,7 @@ export interface Post {
   created_at: string
 }
 function InputBox({}) {
-  const [, setImage] = useState(null)
+  const [image, setImage] = useState(null)
   const [imagePreview, setImagePreview] = useState<string>()
   const [data, setData] = useState<Post[]>([])
   const [error, setError] = useState(null)
@@ -50,7 +50,6 @@ function InputBox({}) {
           size <= maxSize
         ) {
           const base64 = await toBase64(e.target.files[0])
-          console.log(base64)
           setImagePreview(base64)
         }
       } else {
@@ -266,7 +265,7 @@ function InputBox({}) {
         {data?.length === 0 ? (
           <div className="text-center">No Feed to show</div>
         ) : (
-          data?.map((value, index) => {
+          data?.toReversed()?.map((value, index) => {
             return <PostCard post={value} key={index} />
           })
         )}
@@ -304,28 +303,6 @@ const ImageContainerDiv = styled.div`
     filter: brightness(107%) contrast(80%);
   }
 `
-
-const Image = styled.img`
-  object-fit: cover;
-  height: 2.95rem;
-  width: 2.95rem;
-  border-radius: 50%;
-`
-
 const InputTextarea = styled.textarea`
   resize: auto;
-`
-const UploadContainer = styled.div`
-  position: relative;
-  font-family: "General Sans", sans-serif;
-  & input[type="file"] {
-    position: absolute;
-    z-index: 200;
-    opacity: 0;
-    right: 0;
-    top: 35px;
-    padding: 0;
-    width: 100%;
-    height: 72;
-  }
 `
